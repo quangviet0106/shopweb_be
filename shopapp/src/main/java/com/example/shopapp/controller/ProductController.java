@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("api/v1/products")
+@RequestMapping("${spring.sendgrid.api-key}/products")
 public class ProductController {
 
     @GetMapping("")
