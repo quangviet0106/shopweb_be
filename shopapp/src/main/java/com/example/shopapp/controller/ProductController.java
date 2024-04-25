@@ -37,7 +37,6 @@ public class ProductController {
     }
     @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createProduct(@Valid @ModelAttribute ProductDTO productDTO,
-//                                           @RequestPart("file") MultipartFile file,
                                            BindingResult result){
         try{
             if (result.hasErrors()){

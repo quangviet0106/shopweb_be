@@ -13,7 +13,7 @@ import java.sql.Date;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+
 public class User extends BaseEntity{
 
     @Id
@@ -24,7 +24,7 @@ public class User extends BaseEntity{
     private String fullName;
 
     @Column(name = "phone_number", length = 10,nullable = false)
-    private String phoneName;
+    private String phoneNumber;
 
     @Column(name = "address", length = 200)
     private String address;
