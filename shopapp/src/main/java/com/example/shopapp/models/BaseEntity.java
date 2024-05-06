@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+
 @MappedSuperclass
 public class BaseEntity {
     @Column(name = "created_at")

@@ -6,7 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.awt.*;
-import java.util.Date;
+import java.sql.Date;
+
 
 @Data
 @Getter

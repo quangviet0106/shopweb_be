@@ -1,7 +1,16 @@
 package com.example.shopapp.controller;
 
 import com.example.shopapp.dtos.ProductDTO;
+import com.example.shopapp.dtos.ProductImageDTO;
+import com.example.shopapp.exceptions.DataNotFoundException;
+import com.example.shopapp.exceptions.InvalidParamException;
+import com.example.shopapp.models.Product;
+import com.example.shopapp.models.ProductImage;
+import com.example.shopapp.repositories.ProductRepository;
+import com.example.shopapp.services.IProductService;
 import jakarta.validation.*;
+import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +33,10 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("${spring.sendgrid.api-key}/products")
+@RequiredArgsConstructor
 public class ProductController {
+    private final IProductService productService;
+    private final ProductRepository productRepository;
 
     @GetMapping("")
     public ResponseEntity<String> getProducts(@RequestParam("page") int page,
@@ -35,16 +47,28 @@ public class ProductController {
     public ResponseEntity<String> getProductById(@PathVariable("id") Long id){
         return ResponseEntity.ok("The product by id = "+id);
     }
-    @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> createProduct(@Valid @ModelAttribute ProductDTO productDTO,
+    @PostMapping(value = "")
+    public ResponseEntity<?> createProduct(@Valid @RequestBody ProductDTO productDTO,
                                            BindingResult result){
         try{
             if (result.hasErrors()){
                 List<String> errorMessage = result.getFieldErrors().stream().map(FieldError::getDefaultMessage).toList();
                 return ResponseEntity.badRequest().body(errorMessage);
             }
-            List<MultipartFile> files = productDTO.getFiles();
+            Product newProduct = productService.createProduct(productDTO);
+            return ResponseEntity.ok(newProduct);
+        }
+        catch (Exception e){
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    @PostMapping(value = "uploads/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> uploadImages(@PathVariable("id") Long productId,@ModelAttribute("files") List<MultipartFile> files){
+
+        try {
+            Product existingProduct = productService.getProductById(productId);
             files = files == null ? new ArrayList<MultipartFile>() : files;
+            List<ProductImage> productImages = new ArrayList<>();
             for (MultipartFile file: files) {
                 //Kiểm tra kích thước và định dạng của file
                 if (file.getSize() == 0) continue;
@@ -57,15 +81,19 @@ public class ProductController {
                 }
                 //Lưu file và cập nhật urlImage trong DTO
                 String fileName = storeFile(file);
+                ProductImage productImage = productService.createProductImage(existingProduct.getId(), ProductImageDTO.builder()
+                        .imageUrl(fileName)
+                        .build());
+                productImages.add(productImage);
             }
-
-            return ResponseEntity.ok("Product created successfully!");
-        }
-        catch (Exception e){
+            return ResponseEntity.ok().body(productImages);
+        } catch (DataNotFoundException | InvalidParamException | IOException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+
     }
-    private String storeFile(MultipartFile file) throws IOException{
+
+    private @NotNull String storeFile(MultipartFile file) throws IOException{
         String fileName = StringUtils.cleanPath(file.getOriginalFilename());
         // Thêm UUID vào trước tên file để đảm bảo tên file là duy nhất
         String newFileName = UUID.randomUUID().toString() +"_"+fileName;

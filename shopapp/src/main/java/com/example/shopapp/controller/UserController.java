@@ -3,7 +3,9 @@ package com.example.shopapp.controller;
 
 import com.example.shopapp.dtos.UserDTO;
 import com.example.shopapp.dtos.UserLoginDTO;
+import com.example.shopapp.services.UserService;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -17,7 +19,8 @@ import java.util.List;
 @RestController
 @RequestMapping("${spring.sendgrid.api-key}/users")
 public class UserController {
-
+    @Autowired
+    private UserService userService;
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody UserDTO userDTO,
                                           BindingResult result){
@@ -31,6 +34,7 @@ public class UserController {
             if (!userDTO.getPassword().equals(userDTO.getRetypePassword())){
                 return ResponseEntity.badRequest().body("Password does not match!");
             }
+            userService.register(userDTO);
             return ResponseEntity.ok("Register Successfully!");
         }
         catch (Exception e){
