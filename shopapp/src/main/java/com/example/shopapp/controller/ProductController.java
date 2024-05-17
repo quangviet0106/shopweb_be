@@ -7,10 +7,15 @@ import com.example.shopapp.exceptions.InvalidParamException;
 import com.example.shopapp.models.Product;
 import com.example.shopapp.models.ProductImage;
 import com.example.shopapp.repositories.ProductRepository;
+import com.example.shopapp.responses.ProductListResponse;
+import com.example.shopapp.responses.ProductResponse;
 import com.example.shopapp.services.IProductService;
 import jakarta.validation.*;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +34,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @RestController
@@ -39,9 +45,15 @@ public class ProductController {
     private final ProductRepository productRepository;
 
     @GetMapping("")
-    public ResponseEntity<String> getProducts(@RequestParam("page") int page,
-                                              @RequestParam("limit") int limit){
-        return ResponseEntity.ok(String.format("get all products with page = %d, limit = %d", page, limit));
+    public ResponseEntity<ProductListResponse> getProducts(@RequestParam("page") int page,
+                                                           @RequestParam("limit") int limit){
+        // Tạo pageable từ thông tin trang và giới hạn
+        PageRequest pageRequest = PageRequest.of(page,limit, Sort.by("createdAt").descending());
+        Page<ProductResponse> productPage = productService.getAllProducts(pageRequest);
+        //Lấy tổng số trang
+        int totalPages = productPage.getTotalPages();
+        List<ProductResponse> products = productPage.getContent();
+        return ResponseEntity.ok(ProductListResponse.builder().products(products).totalPages(totalPages).build());
     }
     @GetMapping("{id}")
     public ResponseEntity<String> getProductById(@PathVariable("id") Long id){
@@ -68,6 +80,9 @@ public class ProductController {
         try {
             Product existingProduct = productService.getProductById(productId);
             files = files == null ? new ArrayList<MultipartFile>() : files;
+            if (files.size() > ProductImage.MAXIMUM_IMAGES_PER_PRODUCT){
+                return ResponseEntity.badRequest().body("You can only upload maximum 5 images");
+            }
             List<ProductImage> productImages = new ArrayList<>();
             for (MultipartFile file: files) {
                 //Kiểm tra kích thước và định dạng của file
@@ -94,7 +109,10 @@ public class ProductController {
     }
 
     private @NotNull String storeFile(MultipartFile file) throws IOException{
-        String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+        if (!isImageFile(file) || file.getOriginalFilename() == null){
+            throw new IOException("Invalid image format");
+        }
+        String fileName = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
         // Thêm UUID vào trước tên file để đảm bảo tên file là duy nhất
         String newFileName = UUID.randomUUID().toString() +"_"+fileName;
         //Đường dẫn đến thư mục lưu file
@@ -108,6 +126,10 @@ public class ProductController {
         //Sao chép file vào thư mục đích
         Files.copy(file.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
         return newFileName;
+    }
+    private boolean isImageFile(MultipartFile file){
+        String contentType = file.getContentType();
+        return contentType != null && contentType.startsWith("image/");
     }
     @DeleteMapping("{id}")
     public ResponseEntity<String> deleteProduct(@PathVariable("id") Long id){
