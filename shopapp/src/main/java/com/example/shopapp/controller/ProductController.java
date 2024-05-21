@@ -10,6 +10,7 @@ import com.example.shopapp.repositories.ProductRepository;
 import com.example.shopapp.responses.ProductListResponse;
 import com.example.shopapp.responses.ProductResponse;
 import com.example.shopapp.services.IProductService;
+import com.github.javafaker.Faker;
 import jakarta.validation.*;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
@@ -134,5 +135,28 @@ public class ProductController {
     @DeleteMapping("{id}")
     public ResponseEntity<String> deleteProduct(@PathVariable("id") Long id){
         return ResponseEntity.ok("Product delete successfully!");
+    }
+
+    @PostMapping("generateFakeProducts")
+    public ResponseEntity<?> generateFakeProducts(){
+        Faker faker = new Faker();
+        for (int i = 0;i<100;i++){
+            String productName = faker.commerce().productName();
+            if (productService.existsByName(productName)){
+                continue;
+            }
+            ProductDTO productDTO = ProductDTO.builder()
+                    .productName(productName)
+                    .price((float) faker.number().numberBetween(10,90_000_00))
+                    .description(faker.lorem().sentence())
+                    .categoryId((long)faker.number().numberBetween(2,4))
+                    .build();
+            try {
+                productService.createProduct(productDTO);
+            } catch (DataNotFoundException e) {
+                return ResponseEntity.badRequest().body(e.getMessage());
+            }
+        }
+        return ResponseEntity.ok("Inser faker products successfully!");
     }
 }
