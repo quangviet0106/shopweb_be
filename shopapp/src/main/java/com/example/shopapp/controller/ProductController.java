@@ -57,8 +57,14 @@ public class ProductController {
         return ResponseEntity.ok(ProductListResponse.builder().products(products).totalPages(totalPages).build());
     }
     @GetMapping("{id}")
-    public ResponseEntity<String> getProductById(@PathVariable("id") Long id){
-        return ResponseEntity.ok("The product by id = "+id);
+    public ResponseEntity<?> getProductById(@PathVariable("id") Long id){
+        try {
+            Product existingProduct = productService.getProductById(id);
+            return ResponseEntity.ok(ProductResponse.convertFromProduct(existingProduct));
+        } catch (DataNotFoundException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+
     }
     @PostMapping(value = "")
     public ResponseEntity<?> createProduct(@Valid @RequestBody ProductDTO productDTO,
@@ -132,12 +138,30 @@ public class ProductController {
         String contentType = file.getContentType();
         return contentType != null && contentType.startsWith("image/");
     }
-    @DeleteMapping("{id}")
-    public ResponseEntity<String> deleteProduct(@PathVariable("id") Long id){
-        return ResponseEntity.ok("Product delete successfully!");
+
+    @PutMapping("{id}")
+    public ResponseEntity<?> updateProduct(@PathVariable("id") Long id,
+                                            @RequestBody ProductDTO productDTO){
+        try {
+            Product updateProduct = productService.updateProduct(id, productDTO);
+            return ResponseEntity.ok(updateProduct);
+        }catch (Exception e){
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
-    @PostMapping("generateFakeProducts")
+    @DeleteMapping("{id}")
+    public ResponseEntity<?> deleteProduct(@PathVariable("id") Long id){
+        try {
+            productService.deleteProduct(id);
+            return ResponseEntity.ok("Product delete successfully!");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+
+    }
+
+    /*@PostMapping("generateFakeProducts")
     public ResponseEntity<?> generateFakeProducts(){
         Faker faker = new Faker();
         for (int i = 0;i<100;i++){
@@ -158,5 +182,5 @@ public class ProductController {
             }
         }
         return ResponseEntity.ok("Inser faker products successfully!");
-    }
+    }*/
 }
