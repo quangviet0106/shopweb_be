@@ -3,6 +3,7 @@ package com.example.shopapp.controller;
 
 import com.example.shopapp.dtos.UserDTO;
 import com.example.shopapp.dtos.UserLoginDTO;
+import com.example.shopapp.models.User;
 import com.example.shopapp.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,8 +35,8 @@ public class UserController {
             if (!userDTO.getPassword().equals(userDTO.getRetypePassword())){
                 return ResponseEntity.badRequest().body("Password does not match!");
             }
-            userService.register(userDTO);
-            return ResponseEntity.ok("Register Successfully!");
+            User user = userService.register(userDTO);
+            return ResponseEntity.ok(user);
         }
         catch (Exception e){
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -46,6 +47,13 @@ public class UserController {
     public ResponseEntity<?> login(@Valid @RequestBody UserLoginDTO userLoginDTO){
         //Kiểm tra thông tin đăng nhập và sinh token
         // Trả về token trong response
-        return ResponseEntity.ok("some token");
+        try {
+            String token = userService.login(userLoginDTO.getPhoneNumber(), userLoginDTO.getPassword());
+            return ResponseEntity.ok(token);
+        }
+        catch (Exception e){
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+
     }
 }
