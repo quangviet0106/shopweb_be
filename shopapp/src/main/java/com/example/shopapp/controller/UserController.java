@@ -1,6 +1,7 @@
 package com.example.shopapp.controller;
 
 
+import com.example.shopapp.constants.Constants;
 import com.example.shopapp.dtos.UserDTO;
 import com.example.shopapp.dtos.UserLoginDTO;
 import com.example.shopapp.models.User;
@@ -18,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("${spring.sendgrid.api-key}/users")
+@RequestMapping(Constants.API_VERSION+"/users")
 public class UserController {
     @Autowired
     private UserService userService;

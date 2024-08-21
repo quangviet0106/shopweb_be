@@ -1,5 +1,6 @@
 package com.example.shopapp.controller;
 
+import com.example.shopapp.constants.Constants;
 import com.example.shopapp.dtos.ProductDTO;
 import com.example.shopapp.dtos.ProductImageDTO;
 import com.example.shopapp.exceptions.DataNotFoundException;
@@ -39,7 +40,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("${spring.sendgrid.api-key}/products")
+@RequestMapping(Constants.API_VERSION+"/products")
 @RequiredArgsConstructor
 public class ProductController {
     private final IProductService productService;

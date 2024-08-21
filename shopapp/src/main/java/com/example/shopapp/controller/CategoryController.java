@@ -1,5 +1,6 @@
 package com.example.shopapp.controller;
 
+import com.example.shopapp.constants.Constants;
 import com.example.shopapp.dtos.CategoryDTO;
 import com.example.shopapp.models.Category;
 import com.example.shopapp.services.CategoryService;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("${spring.sendgrid.api-key}/categories")
+@RequestMapping(Constants.API_VERSION +"/categories")
 @RequiredArgsConstructor
 public class CategoryController {
     private final CategoryService categoryService;

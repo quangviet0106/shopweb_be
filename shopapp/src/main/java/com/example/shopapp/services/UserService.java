@@ -1,8 +1,10 @@
 package com.example.shopapp.services;
 
 import com.example.shopapp.components.JwtTokenUtil;
+import com.example.shopapp.constants.Constants;
 import com.example.shopapp.dtos.UserDTO;
 import com.example.shopapp.exceptions.DataNotFoundException;
+import com.example.shopapp.exceptions.PermissionDenyException;
 import com.example.shopapp.models.Role;
 import com.example.shopapp.models.User;
 import com.example.shopapp.repositories.RoleRepository;
@@ -30,13 +32,19 @@ public class UserService implements IUserService{
     private final JwtTokenUtil jwtTokenUtil;
     private final AuthenticationManager authenticationManager;
     @Override
-    public User register(UserDTO userDTO) throws DataNotFoundException {
+    public User register(UserDTO userDTO) throws DataNotFoundException, PermissionDenyException {
         String phoneNumber = userDTO.getPhoneNumber();
         //Kiểm tra xem số điện thoại đã tồn tại hay chưa
         if (userRepository.existsByPhoneNumber(phoneNumber)){
             throw new DataIntegrityViolationException("Phone number already exists!");
         }
+        Role role = roleRepository.findById(userDTO.getRoleId())
+                .orElseThrow(()-> new DataNotFoundException("Role not found!"));
+        if (role.getName().toUpperCase().equals(Constants.ADMIN)){
+            throw new PermissionDenyException("You cannot register an admin account!");
+        }
         //convert from userDTO => user
+
         User newUser = User.builder()
                 .fullName(userDTO.getFullName())
                 .phoneNumber(userDTO.getPhoneNumber())
@@ -46,8 +54,7 @@ public class UserService implements IUserService{
                 .facebookAccountId(userDTO.getFacebookAccountId())
                 .googleAccountId(userDTO.getGoogleAccountId())
                 .build();
-        Role role = roleRepository.findById(userDTO.getRoleId())
-                .orElseThrow(()-> new DataNotFoundException("Role not found!"));
+
         newUser.setRole(role);
         //Kiểm tra nếu có accountId, không yêu cầu password
         if (userDTO.getFacebookAccountId() == 0 && userDTO.getGoogleAccountId() == 0){

@@ -1,6 +1,7 @@
 package com.example.shopapp.controller;
 
 
+import com.example.shopapp.constants.Constants;
 import com.example.shopapp.dtos.OrderDTO;
 import com.example.shopapp.models.Order;
 import com.example.shopapp.services.OrderService;
@@ -14,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("${spring.sendgrid.api-key}/orders")
+@RequestMapping(Constants.API_VERSION+"/orders")
 @RequiredArgsConstructor
 public class OrderController {
     private final OrderService orderService;

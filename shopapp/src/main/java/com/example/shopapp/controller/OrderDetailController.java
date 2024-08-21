@@ -1,5 +1,6 @@
 package com.example.shopapp.controller;
 
+import com.example.shopapp.constants.Constants;
 import com.example.shopapp.dtos.OrderDetailDTO;
 import com.example.shopapp.exceptions.DataNotFoundException;
 import com.example.shopapp.models.OrderDetail;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("${spring.sendgrid.api-key}/order_details")
+@RequestMapping(Constants.API_VERSION+"/order_details")
 @RequiredArgsConstructor
 public class OrderDetailController {
 

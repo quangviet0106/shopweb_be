@@ -11,6 +11,7 @@ import io.jsonwebtoken.io.Encoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.InvalidParameterException;
@@ -79,4 +80,12 @@ public class JwtTokenUtil {
         return expirationDate.before(new Date());
     }
 
+    public String extractNumber(String token){
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    public boolean validateToken(String token, UserDetails userDetails){
+        String phoneNumber = extractNumber(token);
+        return (phoneNumber.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    }
 }
